@@ -140,7 +140,7 @@ management api http-commands
 
 ```eos
 !
-username arista privilege 15 role network-admin secret sha512 $6$hGz3Ylv9oAUWkcE7$Jdkf4Asqvoo5B/vPhR6T5V46diQ2E8fI8JoVol9LU7CDXk.SYYpemlqqbpdLvfq33xqW.3Kphooo7FAWwzGQo.
+username arista privilege 15 role network-admin secret sha512 $6$LrqL8TwOQjtv/Yl7$AkuUDjNzNDmlLAWo8MXxBQ9qwI/5K4beoEaNHaHY9cEBWJyigWCFmevd87TztJ3xWitoxng75WI5cfZJYkpkd0
 ```
 
 ## AAA Authorization
@@ -291,6 +291,13 @@ vlan 4094
 
 *Inherited from Port-Channel Interface
 
+#### IPv4
+
+| Interface | Description | Type | Channel Group | IP Address | VRF |  MTU | Shutdown | ACL In | ACL Out |
+| --------- | ----------- | -----| ------------- | ---------- | ----| ---- | -------- | ------ | ------- |
+| Ethernet7 | P2P_LINK_TO_WANCORE_Ethernet2 | routed | - | 10.0.0.29/31 | default | 1500 | False | - | - |
+| Ethernet8 | P2P_LINK_TO_WANCORE_Ethernet2 | routed | - | 10.0.0.33/31 | default | 1500 | False | - | - |
+
 ### Ethernet Interfaces Device Configuration
 
 ```eos
@@ -324,6 +331,24 @@ interface Ethernet6
    description MLAG_PEER_s1-spine2_Ethernet6
    no shutdown
    channel-group 1 mode active
+!
+interface Ethernet7
+   description P2P_LINK_TO_WANCORE_Ethernet2
+   no shutdown
+   mtu 1500
+   no switchport
+   ip address 10.0.0.29/31
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
+!
+interface Ethernet8
+   description P2P_LINK_TO_WANCORE_Ethernet2
+   no shutdown
+   mtu 1500
+   no switchport
+   ip address 10.0.0.33/31
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 ```
 
 ## Port-Channel Interfaces
@@ -516,7 +541,7 @@ ip route 0.0.0.0/0 192.168.0.1
 
 | Process ID | Router ID | Default Passive Interface | No Passive Interface | BFD | Max LSA | Default Information Originate | Log Adjacency Changes Detail | Auto Cost Reference Bandwidth | Maximum Paths | MPLS LDP Sync Default | Distribute List In |
 | ---------- | --------- | ------------------------- | -------------------- | --- | ------- | ----------------------------- | ---------------------------- | ----------------------------- | ------------- | --------------------- | ------------------ |
-| 100 | 10.1.252.1 | enabled | Vlan4093 <br> | disabled | 12000 | disabled | disabled | - | - | - | - |
+| 100 | 10.1.252.1 | enabled | Vlan4093 <br> Ethernet7 <br> Ethernet8 <br> | disabled | 12000 | disabled | disabled | - | - | - | - |
 
 ### Router OSPF Router Redistribution
 
@@ -528,6 +553,8 @@ ip route 0.0.0.0/0 192.168.0.1
 
 | Interface | Area | Cost | Point To Point |
 | -------- | -------- | -------- | -------- |
+| Ethernet7 | 0.0.0.0 | - | True |
+| Ethernet8 | 0.0.0.0 | - | True |
 | Vlan4093 | 0.0.0.0 | - | True |
 | Loopback0 | 0.0.0.0 | - | - |
 
@@ -539,6 +566,8 @@ router ospf 100
    router-id 10.1.252.1
    passive-interface default
    no passive-interface Vlan4093
+   no passive-interface Ethernet7
+   no passive-interface Ethernet8
    max-lsa 12000
    redistribute connected
 ```
